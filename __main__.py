@@ -6,6 +6,7 @@ from stable_baselines3 import DQN, PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
 import os
+from snake_gym_env import SnakeGameEnv
 
 class SnakeEnv(gym.Env):
     """Custom Snake Environment that follows gym interface"""
@@ -83,21 +84,25 @@ class SnakeEnv(gym.Env):
 def train_and_evaluate(model_class, env, total_timesteps, model_name):
     model = model_class("MlpPolicy", env, verbose=1)
     model.learn(total_timesteps=total_timesteps)
+    
+    # Save the model
+    model.save(model_name)
+    
     mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10)
-    return mean_reward, std_reward
+    return model, mean_reward, std_reward
 
 def main():
     # Create and wrap the environment
-    env = SnakeEnv(grid_size=10)
+    env = SnakeGameEnv()
     env = Monitor(env)
     
     print("Training DQN...")
-    dqn_mean_reward, dqn_std_reward = train_and_evaluate(
+    dqn_model, dqn_mean_reward, dqn_std_reward = train_and_evaluate(
         DQN, env, total_timesteps=200000, model_name="dqn_snake"
     )
     
     print("Training PPO...")
-    ppo_mean_reward, ppo_std_reward = train_and_evaluate(
+    ppo_model, ppo_mean_reward, ppo_std_reward = train_and_evaluate(
         PPO, env, total_timesteps=200000, model_name="ppo_snake"
     )
     
